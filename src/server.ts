@@ -4,7 +4,7 @@ import url, { pathToFileURL } from 'url';
 
 
 
-const PORT = process.env.PORT ?? 8080;
+const PORT = process.env.PORT || 8080;
 
 // Handler para requisições HTTP (GET, POST etc.)
 export function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) { 
