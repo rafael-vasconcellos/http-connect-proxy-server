@@ -9,10 +9,16 @@ const PORT = process.env.PORT ?? 8080;
 // Handler para requisições HTTP (GET, POST etc.)
 function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) {
     const parsedUrl = url.parse(clientReq.url || '');
+
+    if (!parsedUrl.hostname || !parsedUrl.path) {
+        clientRes.writeHead(400);
+        clientRes.end('URL inválida');
+        return;
+    }
     
     const options: RequestOptions = {
         hostname: parsedUrl.hostname,
-        port: parsedUrl.port || 80,
+        port: parsedUrl.port || 443,
         path: parsedUrl.path,
         method: clientReq.method,
         headers: clientReq.headers
@@ -27,16 +33,17 @@ function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) {
         console.error('Erro na requisição proxy:', err.message);
         clientRes.writeHead(500);
         clientRes.end('Erro no proxy');
+        proxyReq.end(); // Adicionado para garantir o encerramento
     });
 
     clientReq.pipe(proxyReq, { end: true });
 };
 
 // Handler para conexões HTTPS via método CONNECT
-function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Buffer) {
-    const [ host, port ] = (req.url || '').split(':');
-
-    const serverSocket = net.connect(parseInt(port, 10), host, () => {
+function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Buffer) { 
+    const [ hostname, port ] = (req.url || '').split(':');
+    const targetPort = port ? parseInt(port, 10) : 443;
+    const serverSocket = net.connect(targetPort, hostname, () => {
         clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
         serverSocket.write(head);
         serverSocket.pipe(clientSocket);
@@ -47,7 +54,14 @@ function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Bu
         console.error('Erro no túnel CONNECT:', err.message);
         clientSocket.end();
     });
+
+    clientSocket.on('error', (err) => {
+        console.error('Erro no socket do cliente:', err.message);
+    }); 
 };
+
+
+
 
 // Cria o servidor proxy
 const proxyServer = http.createServer(requestHandler);
