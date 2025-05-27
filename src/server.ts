@@ -1,13 +1,13 @@
 import http, { IncomingMessage, RequestOptions, ServerResponse } from 'http';
 import net from 'net';
-import url from 'url';
+import url, { pathToFileURL } from 'url';
 
 
 
 const PORT = process.env.PORT ?? 8080;
 
 // Handler para requisições HTTP (GET, POST etc.)
-function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) {
+export function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) { 
     const parsedUrl = url.parse(clientReq.url || '');
 
     if (!parsedUrl.hostname || !parsedUrl.path) {
@@ -40,7 +40,7 @@ function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) {
 };
 
 // Handler para conexões HTTPS via método CONNECT
-function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Buffer) { 
+export function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Buffer) { 
     const [ hostname, port ] = (req.url || '').split(':');
     const targetPort = port ? parseInt(port, 10) : 443;
     const serverSocket = net.connect(targetPort, hostname, () => {
@@ -63,11 +63,10 @@ function connectHandler(req: IncomingMessage, clientSocket: net.Socket, head: Bu
 
 
 
-// Cria o servidor proxy
-const proxyServer = http.createServer(requestHandler);
-
-proxyServer.on('connect', connectHandler);
-
-proxyServer.listen(PORT, () => {
-    console.log(`Proxy HTTP ouvindo na porta ${PORT}`);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) { 
+    const proxyServer = http.createServer(requestHandler);
+    proxyServer.on('connect', connectHandler);
+    proxyServer.listen(PORT, () => {
+        console.log(`Proxy HTTP ouvindo na porta ${PORT}`);
+    });
+}
