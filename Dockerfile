@@ -3,7 +3,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY ./ ./
 
-ARG PORT=8080
+ARG PORT=80
 ENV PORT=$PORT
 RUN echo "PORT is $PORT"
 
