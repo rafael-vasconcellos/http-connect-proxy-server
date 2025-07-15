@@ -4,7 +4,7 @@
 const https = require('https');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
-// Configurações
+// Configs
 const proxyUrl = 'http://user:pass@proxy.example.com:8080'; // replace it with the deployed url
 const targetUrl = 'https://www.google.com/';
 
