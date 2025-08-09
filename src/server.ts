@@ -6,7 +6,7 @@ import type { IncomingMessage, RequestOptions, ServerResponse } from 'http';
 
 
 console.log("Env PORT: " + process.env.PORT)
-const PORT = process.env.PORT || 8080;
+export const PORT = process.env.PORT || 8080;
 
 // Handler para requisições HTTP (GET, POST etc.)
 export function requestHandler(clientReq: IncomingMessage, clientRes: ServerResponse) { 
@@ -14,7 +14,7 @@ export function requestHandler(clientReq: IncomingMessage, clientRes: ServerResp
 
     if (!parsedUrl.hostname || !parsedUrl.path) {
         clientRes.writeHead(400);
-        clientRes.end('URL inválida');
+        clientRes.end('Invalid URL.');
         return;
     }
     
@@ -32,9 +32,9 @@ export function requestHandler(clientReq: IncomingMessage, clientRes: ServerResp
     });
 
     proxyReq.on('error', (err) => {
-        console.error('Erro na requisição proxy:', err.message);
+        console.error('Error on proxy request:', err.message);
         clientRes.writeHead(500);
-        clientRes.end('Erro no proxy');
+        clientRes.end('Error on proxy.');
         proxyReq.end(); // Adicionado para garantir o encerramento
     });
 
@@ -62,13 +62,16 @@ export function connectHandler(req: IncomingMessage, clientSocket: net.Socket, h
     }); 
 };
 
-
-
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) { 
+export function startServer() { 
+    const { promise, resolve, reject } = Promise.withResolvers()
     const proxyServer = http.createServer(requestHandler);
     proxyServer.on('connect', connectHandler);
     proxyServer.listen(PORT, () => {
-        console.log(`Proxy HTTP ouvindo na porta ${PORT}`);
+        console.log(`HTTP Proxy listening on: ${PORT}`);
+        resolve(proxyServer);
     });
+    return promise
 }
+
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) { startServer() }
