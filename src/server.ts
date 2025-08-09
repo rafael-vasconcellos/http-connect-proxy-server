@@ -1,6 +1,7 @@
-import http, { IncomingMessage, RequestOptions, ServerResponse } from 'http';
+import http from 'http';
 import net from 'net';
 import url, { pathToFileURL } from 'url';
+import type { IncomingMessage, RequestOptions, ServerResponse } from 'http';
 
 
 
